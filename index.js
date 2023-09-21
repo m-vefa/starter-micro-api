@@ -1,64 +1,50 @@
-require('dotenv').config();
 const express = require('express');
-const order = require('./models/books').default;
+const mongoose = require('mongoose');
+const bodyParser = require('body-parser');
+const cors = require('cors');
+const dotenv = require('dotenv');
+const Order = require('./models/books');
 
-const mnogoose = require('mongoose');
+dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-mnogoose.set('strictQuery', false);
+mongoose.set('strictQuery', false);
+
 const connectDB = async () => {
   try {
-    const conn = await mnogoose.connect(process.env.MONGO_URI);
+    const conn = await mongoose.connect(process.env.MONGO_URI);
     console.log(`MongoDB Connected: ${conn.connection.host}`);
-
   } catch (error) {
-
-    console.log(error);
-
-    process.exit(1)
+    console.error(error);
+    process.exit(1);
   }
-}
+};
 
-
-
-
-const bodyParser = require('body-parser');
-
-var cors = require('cors')
-app.use(cors())
-
+app.use(cors());
 app.use(bodyParser.json());
 
+app.get('/api/a', (req, res) => {
+  console.log('Successfully accessed /api/a');
+  res.status(200).send('Success');
+});
 
-app.get('/api/a'), (req, res) => {
-  console.log(' successfully');
-  res.status(200);
-}
 
 app.post('/api/order', async (req, res) => {
   try {
     const formData = req.body;
-    const product = await order.create(formData);
+    const product = await Order.create(formData);
 
     console.log('Received form data:', formData);
-
-    // Send a single JSON response with both product data and success message
-    res.status(200).json({
-      product,
-      message: 'Order submitted successfully'
-    });
+    res.status(200).json({ product, message: 'Order submitted successfully' });
   } catch (error) {
-    // Handle errors and send an error response if needed
     console.error('Error:', error);
     res.status(500).json({ error: 'An error occurred while processing your order' });
   }
 });
 
-
 connectDB().then(() => {
-
   app.listen(PORT, () => {
-    console.log()
-  })
-})
+    console.log(`Server is running on http://localhost:${PORT}/`);
+  });
+});
